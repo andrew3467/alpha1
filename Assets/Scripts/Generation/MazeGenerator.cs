@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 
 public class MazeGenerator : MonoBehaviour {
     const float WALL_SIZE_X = 8f; 
@@ -13,16 +12,12 @@ public class MazeGenerator : MonoBehaviour {
     [SerializeField] GameObject floorPrefab;
     [SerializeField] Material groundMat;
     
-    
     [Space(20)]
     [SerializeField] Vector2Int size = Vector2Int.zero;
     [SerializeField] int depth = 4;
 
-
     List<GameObject> walls;
     GameObject ground;
-
-
 
     void Start() {
         walls = new List<GameObject>();
@@ -31,15 +26,20 @@ public class MazeGenerator : MonoBehaviour {
     }
 
     void GenerateCells() {
-        MazeCell cell = new MazeCell(new Vector2Int(0,1), floorPrefab);
-        cell.AddWall(Facing.North, wallPrefab);
-        cell.AddWall(Facing.South, wallPrefab);
-        cell.AddWall(Facing.East, wallPrefab);
-        cell.AddWall(Facing.West, wallPrefab);
+        for (int x = 0; x < size.x; x++) {
+            for (int y = 0; y < size.y; y++) {
+                Vector2Int cellPosition = new Vector2Int(x, y);
+                MazeCell cell = new MazeCell(cellPosition, floorPrefab, parent);
+                cell.AddWall(Facing.North, wallPrefab, parent);
+                cell.AddWall(Facing.South, wallPrefab, parent);
+                cell.AddWall(Facing.East, wallPrefab, parent);
+                cell.AddWall(Facing.West, wallPrefab, parent);
+            }
+        }
     }
 
     void GenerateMaze(int depth) {
-        
+        // Maze generation logic here
     }
 
     enum Facing {
@@ -54,55 +54,46 @@ public class MazeGenerator : MonoBehaviour {
         GameObject Floor;
         Vector2Int Position;
 
-        public MazeCell(Vector2Int pos, GameObject floorPrefab) {
-            Floor = Instantiate(floorPrefab);
-            Walls = new GameObject[4];
+        public MazeCell(Vector2Int pos, GameObject floorPrefab, Transform parent) {
             Position = pos;
+            Floor = GameObject.Instantiate(floorPrefab);
+            Floor.transform.position = new Vector3(Position.x * WALL_SIZE_X, 0, Position.y * WALL_SIZE_Y);
+            Floor.transform.SetParent(parent);
+            Walls = new GameObject[4];
         }
 
-        public void AddWall(Facing facing, GameObject wallPrefab) {
-            Vector3 rotation = new Vector3(
-                0,
-                90.0f * (int)facing,
-                0
-            );
-
-            GameObject wall = GameObject.Instantiate(wallPrefab);
-            wall.transform.rotation = Quaternion.Euler(rotation);
+        public void AddWall(Facing facing, GameObject wallPrefab, Transform parent) {
+            Vector3 positionOffset = Vector3.zero;
+            Vector3 rotation = Vector3.zero;
 
             switch (facing) {
                 case Facing.North:
-                    wall.transform.position = new Vector3(
-                            0,
-                            3,
-                            Position.y + 4.0f
-                    );
+                    positionOffset = new Vector3(0, 3, WALL_SIZE_Y / 2);
+                    rotation = new Vector3(0, 0, 0);
                     break;
-                
+
                 case Facing.South:
-                    wall.transform.position = new Vector3(
-                        0,
-                        3,
-                        -(Position.y + 4.0f)
-                    );
+                    positionOffset = new Vector3(0, 3, -WALL_SIZE_Y / 2);
+                    rotation = new Vector3(0, 180, 0);
                     break;
-                
+
                 case Facing.East:
-                    wall.transform.position = new Vector3(
-                        Position.x + 4.0f,
-                        3,
-                        0
-                    );
+                    positionOffset = new Vector3(WALL_SIZE_X / 2, 3, 0);
+                    rotation = new Vector3(0, 90, 0);
                     break;
-                
+
                 case Facing.West:
-                    wall.transform.position = new Vector3(
-                        -(Position.x + 4.0f),
-                        3,
-                        0
-                    );
+                    positionOffset = new Vector3(-WALL_SIZE_X / 2, 3, 0);
+                    rotation = new Vector3(0, -90, 0);
                     break;
             }
+
+            GameObject wall = GameObject.Instantiate(wallPrefab);
+            wall.transform.position = new Vector3(Position.x * WALL_SIZE_X, 0, Position.y * WALL_SIZE_Y) + positionOffset;
+            wall.transform.rotation = Quaternion.Euler(rotation);
+            wall.transform.SetParent(parent);
+
+            Walls[(int)facing] = wall;
         }
     }
 }
