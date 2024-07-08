@@ -6,53 +6,72 @@ using Cursor = UnityEngine.Cursor;
 
 [RequireComponent(typeof(CharacterController))]
 public class FPSController : MonoBehaviour {
-    [SerializeField] CharacterController characterController;
-    [SerializeField] GameObject body;
-    [SerializeField] Camera camera;
-    [SerializeField] float moveSpeed = 1.0f;
-    [SerializeField] float sensitivity = 1.0f;
-    [SerializeField] float rotateXLimit = 45f;
+    InputSystemFirstPersonControls inputActions;
+    private CharacterController controller;
+    
+    [SerializeField] private Camera cam;
+    [SerializeField] private float movementSpeed = 2.0f;
+    [SerializeField] public float lookSensitivity = 1.0f;
+    
+    private float xRotation = 0f;
+
+    // Movement Vars
+    private Vector3 velocity;
+    public float gravity = -9.81f;
+    private bool grounded;
+    
+    // Crouch Vars
+    private float initHeight;
+    [SerializeField] private float crouchHeight;
     
 
-    float rotationX = 0;
-    Vector3 moveDirection = Vector3.zero;
-
-
-
-    void Awake() {
+    void Start() {
+        controller = GetComponent<CharacterController>();
+        initHeight = controller.height;
+        
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
-    
-    void FixedUpdate() {
+
+    void Update() {
         Move();
         Rotate();
+        Crouch();
     }
 
 
+    void Crouch() {
+        
+    }
+
     void Rotate() {
-        rotationX += -Input.GetAxis("Mouse Y") * sensitivity;
-        rotationX = Mathf.Clamp(rotationX, -rotateXLimit, rotateXLimit);
-        camera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * sensitivity, 0);
+        Vector2 looking = GetPlayerLook();
+        
+        float lookX = looking.x * lookSensitivity * Time.deltaTime;
+        float lookY = looking.y * lookSensitivity * Time.deltaTime;
+
+        xRotation -= lookY;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        
+        cam.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        
+        transform.Rotate(Vector3.up * lookX);
+        cam.transform.parent.Rotate(Vector3.up * lookX);
     }
 
     void Move() {
-        bool grounded = characterController.isGrounded;
-
-        Vector3 forward = transform.TransformDirection(Vector3.forward);
-        Vector3 right = transform.TransformDirection(Vector3.right);
-
-        float curSpeedX = moveSpeed * Input.GetAxis("Vertical");
-        float curSpeedZ = moveSpeed * Input.GetAxis("Horizontal");
-
-        float movementDirectionY = moveDirection.y;
-        moveDirection = (forward * curSpeedX) + (right * curSpeedZ);
-        
-        if (!grounded) {
-            moveDirection.y += Alpha1.GRAVITY;
+        grounded = controller.isGrounded;
+        if (grounded && velocity.y < 0) {
+            velocity.y = -2f;
         }
+    }
+    
+    public Vector2 GetPlayerMovement()
+    {
+        return inputActions.FPSController.Move.ReadValue<Vector2>();
+    }
 
-        characterController.Move(moveDirection);
+    Vector2 GetPlayerLook() {
+        return inputActions.FPSController.Look.ReadValue<Vector2>();
     }
 }
