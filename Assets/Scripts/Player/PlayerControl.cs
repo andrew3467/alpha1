@@ -6,27 +6,17 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    public Camera playerCamera;
     public float walkSpeed = 7f;
     public float runSpeed = 12f;
     public float jumpPower = 7f;
     public float gravity = 17f;
-    public float lookSpeed = 2f;
-    public float lookXLimit = 90f;
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
     public float crouchSpeed = 3f;
 
-    [Space(20)]
-    public GameObject flashlight;
-    
-    
     private Vector3 moveDirection = Vector3.zero;
-    private float rotationX = 0;
     private CharacterController characterController;
-
     private bool canMove = true;
-    private bool flashlightEnabled = false;
 
     void Start()
     {
@@ -34,15 +24,13 @@ public class PlayerMovement : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    void FixedUpdate() {
+    void FixedUpdate()
+    {
         ProcessInput();
     }
-    
-    void ProcessInput() {
-        if (Input.GetKeyDown(KeyCode.F)) {
-            flashlightEnabled = !flashlightEnabled;
-            flashlight.SetActive(flashlightEnabled);
-        }
+
+    void ProcessInput()
+    {
     }
 
     void Update()
@@ -90,13 +78,5 @@ public class PlayerMovement : MonoBehaviour
         }
 
         characterController.Move(moveDirection * Time.deltaTime);
-
-        if (canMove)
-        {
-            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
-            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
-        }
     }
 }

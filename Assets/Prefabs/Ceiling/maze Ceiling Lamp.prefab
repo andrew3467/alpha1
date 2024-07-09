@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2441963236025356205}
   - component: {fileID: 5732611955728784830}
   m_Layer: 0
-  m_Name: maze Ceiling Default
+  m_Name: maze Ceiling Lamp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
