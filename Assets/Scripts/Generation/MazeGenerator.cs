@@ -6,6 +6,11 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 
+[System.Serializable]
+struct WeightedPrefab {
+    public GameObject GO;
+    public int Weight;
+}
 
 public class MazeGenerator : MonoBehaviour {
     Vector2Int[] Neighbors = new [] {
@@ -19,8 +24,9 @@ public class MazeGenerator : MonoBehaviour {
     const float WALL_SIZE_Y = 8f;
 
     [SerializeField] Transform parent;
-    [SerializeField] GameObject wallPrefab;
-    [SerializeField] GameObject floorPrefab;
+    [SerializeField] WeightedPrefab[] wallPrefabs;
+    [SerializeField] WeightedPrefab[] floorPrefabs;
+    [SerializeField] WeightedPrefab[] ceilingPrefabs;
     [SerializeField] GameObject playerPrefab;
 
     [Space(20)]
@@ -36,14 +42,28 @@ public class MazeGenerator : MonoBehaviour {
     bool firstRun = true;
     bool mazeGenerating = false;
 
+    int floorWeight;
+    int wallWeight;
+    int ceilingWeight;
+
     void Start() {
         mazeCells = new Dictionary<Vector2Int, MazeCell>();
         frontierCells = new List<Vector2Int>();
 
         prng = new System.Random();
+
+        CalculateWeights();
+        
+        
+        
         StartPrims();
     }
-    
+    void CalculateWeights() {
+        for (int i = 0; i < floorPrefabs.Length; i++) {
+            floorWeight += floorPrefabs[i].Weight;
+        }
+    }
+
     Vector2Int GetRandomCell() {
         return frontierCells[prng.Next(0, frontierCells.Count)];
     }
@@ -87,9 +107,19 @@ public class MazeGenerator : MonoBehaviour {
             frontierCells.Remove(selection);
         }
 
-            MazeCell cell = new MazeCell(selection, floorPrefab, parent);
-            
-            
+
+        int randomFloor = prng.Next(0, floorWeight);
+        GameObject floorGO = floorPrefabs[0].GO;
+
+        foreach (var go in floorPrefabs) {
+            if (randomFloor < go.Weight) {
+                floorGO = go.GO;
+            }
+        }
+        
+        MazeCell cell = new MazeCell(selection, floorGO, ceilingPrefabs[0].GO, parent);
+
+        var wallPrefab = wallPrefabs[prng.Next(0, wallPrefabs.Length - 1)].GO;
         cell.AddWall(Facing.North, wallPrefab);
         cell.AddWall(Facing.South, wallPrefab);
         cell.AddWall(Facing.East, wallPrefab);
@@ -196,14 +226,20 @@ public class MazeGenerator : MonoBehaviour {
     {
         public GameObject[] Walls;
         public GameObject Floor;
+        public GameObject Ceiling;
         public Vector2Int Position;
 
-        public MazeCell(Vector2Int pos, GameObject floorPrefab, Transform parent)
+        public MazeCell(Vector2Int pos, GameObject floorPrefab, GameObject ceilingPrefab, Transform parent)
         {
             Position = pos;
             Floor = GameObject.Instantiate(floorPrefab);
             Floor.transform.position = new Vector3(Position.x * WALL_SIZE_X, 0, Position.y * WALL_SIZE_Y);
             Floor.transform.SetParent(parent);
+            
+            Ceiling = GameObject.Instantiate(ceilingPrefab);
+            Ceiling.transform.position = new Vector3(Position.x * WALL_SIZE_X, 8, Position.y * WALL_SIZE_Y);
+            Ceiling.transform.SetParent(parent);
+            
             Walls = new GameObject[4];
         }
 
