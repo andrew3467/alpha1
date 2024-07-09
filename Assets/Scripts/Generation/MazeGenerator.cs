@@ -237,7 +237,7 @@ public class MazeGenerator : MonoBehaviour {
             Floor.transform.SetParent(parent);
             
             Ceiling = GameObject.Instantiate(ceilingPrefab);
-            Ceiling.transform.position = new Vector3(Position.x * WALL_SIZE_X, 8, Position.y * WALL_SIZE_Y);
+            Ceiling.transform.position = new Vector3(Position.x * WALL_SIZE_X, 6, Position.y * WALL_SIZE_Y);
             Ceiling.transform.SetParent(parent);
             
             Walls = new GameObject[4];

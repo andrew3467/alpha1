@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,16 +17,32 @@ public class PlayerMovement : MonoBehaviour
     public float crouchHeight = 1f;
     public float crouchSpeed = 3f;
 
+    [Space(20)]
+    public GameObject flashlight;
+    
+    
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
     private CharacterController characterController;
 
     private bool canMove = true;
+    private bool flashlightEnabled = false;
 
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    void FixedUpdate() {
+        ProcessInput();
+    }
+    
+    void ProcessInput() {
+        if (Input.GetKeyDown(KeyCode.F)) {
+            flashlightEnabled = !flashlightEnabled;
+            flashlight.SetActive(flashlightEnabled);
+        }
     }
 
     void Update()
