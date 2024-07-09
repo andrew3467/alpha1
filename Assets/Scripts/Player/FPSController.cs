@@ -6,7 +6,6 @@ using Cursor = UnityEngine.Cursor;
 
 [RequireComponent(typeof(CharacterController))]
 public class FPSController : MonoBehaviour {
-    InputSystemFirstPersonControls inputActions;
     private CharacterController controller;
     
     [SerializeField] private Camera cam;
@@ -45,7 +44,7 @@ public class FPSController : MonoBehaviour {
     }
 
     void Rotate() {
-        Vector2 looking = GetPlayerLook();
+        /*
         
         float lookX = looking.x * lookSensitivity * Time.deltaTime;
         float lookY = looking.y * lookSensitivity * Time.deltaTime;
@@ -57,21 +56,15 @@ public class FPSController : MonoBehaviour {
         
         transform.Rotate(Vector3.up * lookX);
         cam.transform.parent.Rotate(Vector3.up * lookX);
+        */
     }
 
     void Move() {
+        /*
         grounded = controller.isGrounded;
         if (grounded && velocity.y < 0) {
             velocity.y = -2f;
         }
-    }
-    
-    public Vector2 GetPlayerMovement()
-    {
-        return inputActions.FPSController.Move.ReadValue<Vector2>();
-    }
-
-    Vector2 GetPlayerLook() {
-        return inputActions.FPSController.Look.ReadValue<Vector2>();
+        */
     }
 }

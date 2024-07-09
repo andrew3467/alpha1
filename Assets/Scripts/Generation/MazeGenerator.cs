@@ -3,196 +3,159 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MazeGenerator : MonoBehaviour
-{
+public class MazeGenerator : MonoBehaviour {
+    Vector2Int[] Neighbors = new [] {
+        new Vector2Int(1, 0),
+        new Vector2Int(-1, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(0, -1),
+    };
+    
     const float WALL_SIZE_X = 8f;
     const float WALL_SIZE_Y = 8f;
 
     [SerializeField] Transform parent;
     [SerializeField] GameObject wallPrefab;
     [SerializeField] GameObject floorPrefab;
-    [SerializeField] Material groundMat;
 
     [Space(20)]
-    [SerializeField] Vector2Int size = new Vector2Int(60, 60);  // Set the maze size to 60x60
-    [SerializeField] int depth = 4;
+    [SerializeField] int maxCellsCount = 512;
+    [SerializeField] int delay = 1;
 
-    List<GameObject> walls;
-    GameObject ground;
-    MazeCell[,] cells;
+    Dictionary<Vector2Int, MazeCell> mazeCells;
+    public List<Vector2Int> frontierCells;
 
-    void Start()
-    {
-        walls = new List<GameObject>();
-        GenerateCells();
-        GenerateMaze();
+    MazeCell prevCell;
+
+    System.Random prng;
+    bool firstRun = true;
+
+    void Start() {
+        mazeCells = new Dictionary<Vector2Int, MazeCell>();
+        frontierCells = new List<Vector2Int>();
+
+        prng = new System.Random();
+        
+    }
+    
+    Vector2Int GetRandomCell() {
+        return frontierCells[prng.Next(0, frontierCells.Count)];
     }
 
-    void GenerateCells()
-    {
-        cells = new MazeCell[size.x, size.y];
-        for (int x = 0; x < size.x; x++)
-        {
-            for (int y = 0; y < size.y; y++)
-            {
-                Vector2Int cellPosition = new Vector2Int(x, y);
-                cells[x, y] = new MazeCell(cellPosition, floorPrefab, parent);
-                cells[x, y].AddWall(Facing.North, wallPrefab, parent);
-                cells[x, y].AddWall(Facing.South, wallPrefab, parent);
-                cells[x, y].AddWall(Facing.East, wallPrefab, parent);
-                cells[x, y].AddWall(Facing.West, wallPrefab, parent);
+    public void StartPrims() {
+        StartCoroutine(RunPrims());
+    }
+
+
+    IEnumerator RunPrims() {
+        bool running = true;
+        while (running) {
+            StepThroughPrims();
+            print(mazeCells.Count);
+            yield return new WaitForSeconds(delay);
+
+            running = mazeCells.Count < maxCellsCount;
+        }
+    }
+
+    public void StepThroughPrims() {
+        Vector2Int selection;
+        bool firstRun = false;
+
+        if (frontierCells.Count == 0) {
+            selection = Vector2Int.zero;
+        } else {
+            selection = GetRandomCell();
+
+            while (mazeCells.ContainsKey(selection)) {
+                selection = GetRandomCell();
+            }
+            
+            frontierCells.Remove(selection);
+        }
+
+            MazeCell cell = new MazeCell(selection, floorPrefab, parent);
+        cell.AddWall(Facing.North, wallPrefab);
+        cell.AddWall(Facing.South, wallPrefab);
+        cell.AddWall(Facing.East, wallPrefab);
+        cell.AddWall(Facing.West, wallPrefab);
+        
+        
+        
+        mazeCells.Add(selection, cell);
+
+        //None is not on edge
+        for (int i = 0; i < Neighbors.Length; i++) {
+            Facing neighborFacing = (Facing)i;
+            var neighborPos = selection + Neighbors[i];
+
+            if (!mazeCells.ContainsKey(neighborPos)) {
+                frontierCells.Add(neighborPos);
             }
         }
+
+        if (prevCell != null) {
+            RemoveWalls(cell, mazeCells[RandomNeighbor(cell)]);
+        }
+
+        prevCell = cell;
+
     }
 
-    void GenerateMaze()
-    {
-        List<Edge> edges = new List<Edge>();
-        for (int x = 0; x < size.x; x++)
-        {
-            for (int y = 0; y < size.y; y++)
-            {
-                if (x < size.x - 1)
-                {
-                    edges.Add(new Edge(new Vector2Int(x, y), new Vector2Int(x + 1, y)));
-                }
-                if (y < size.y - 1)
-                {
-                    edges.Add(new Edge(new Vector2Int(x, y), new Vector2Int(x, y + 1)));
-                }
-            }
+    Vector2Int RandomNeighbor(MazeCell cell) {
+        var neighbor = cell.Position + Neighbors[prng.Next(0, Neighbors.Length)];
+
+        while (!mazeCells.ContainsKey(neighbor)) {
+            neighbor = cell.Position + Neighbors[prng.Next(0, Neighbors.Length)];
         }
 
-        edges = Shuffle(edges);
+        return neighbor;
+    }
+    
+    void RemoveWalls(MazeCell cell, MazeCell other) {
+        Facing direction = FacingFromOffset(cell.Position - other.Position);
 
-        DisjointSet ds = new DisjointSet(size.x * size.y);
-
-        foreach (var edge in edges)
-        {
-            int cellIndex1 = edge.Cell1.x + edge.Cell1.y * size.x;
-            int cellIndex2 = edge.Cell2.x + edge.Cell2.y * size.x;
-
-            if (ds.Find(cellIndex1) != ds.Find(cellIndex2))
-            {
-                ds.Union(cellIndex1, cellIndex2);
-                RemoveWall(cells[edge.Cell1.x, edge.Cell1.y], cells[edge.Cell2.x, edge.Cell2.y]);
-            }
+        switch (direction) {
+            case Facing.North:
+                other.RemoveWall(Facing.North);
+                cell.RemoveWall(Facing.South);
+                break;
+            case Facing.South:
+                other.RemoveWall(Facing.South);
+                cell.RemoveWall(Facing.North);
+                break;
+            case Facing.East:
+                other.RemoveWall(Facing.East);
+                cell.RemoveWall(Facing.West);
+                break;
+            case Facing.West:
+                other.RemoveWall(Facing.West);
+                cell.RemoveWall(Facing.East);
+                break;
         }
     }
-
-    void RemoveWall(MazeCell cell1, MazeCell cell2)
-    {
-        Vector2Int direction = cell2.Position - cell1.Position;
-        if (direction == Vector2Int.up)
-        {
-            Destroy(cell1.Walls[(int)Facing.North]);
-            Destroy(cell2.Walls[(int)Facing.South]);
+    
+    Facing FacingFromOffset(Vector2Int prevCellPosition) {
+        for (int i = 0; i < Neighbors.Length; i++) {
+            if (Neighbors[i] == prevCellPosition) return (Facing)i;
         }
-        else if (direction == Vector2Int.down)
-        {
-            Destroy(cell1.Walls[(int)Facing.South]);
-            Destroy(cell2.Walls[(int)Facing.North]);
-        }
-        else if (direction == Vector2Int.right)
-        {
-            Destroy(cell1.Walls[(int)Facing.East]);
-            Destroy(cell2.Walls[(int)Facing.West]);
-        }
-        else if (direction == Vector2Int.left)
-        {
-            Destroy(cell1.Walls[(int)Facing.West]);
-            Destroy(cell2.Walls[(int)Facing.East]);
-        }
-    }
-
-    List<Edge> Shuffle(List<Edge> edges)
-    {
-        System.Random rng = new System.Random();
-        int n = edges.Count;
-        while (n > 1)
-        {
-            n--;
-            int k = rng.Next(n + 1);
-            Edge value = edges[k];
-            edges[k] = edges[n];
-            edges[n] = value;
-        }
-        return edges;
+        return Facing.None;
     }
 
     public enum Facing
     {
+        None = -1,
         North = 0,
         South = 1,
         East = 2,
         West = 3
     }
-
-    struct Edge
-    {
-        public Vector2Int Cell1;
-        public Vector2Int Cell2;
-
-        public Edge(Vector2Int cell1, Vector2Int cell2)
-        {
-            Cell1 = cell1;
-            Cell2 = cell2;
-        }
-    }
-
-    public class DisjointSet
-    {
-        int[] parent, rank;
-
-        public DisjointSet(int n)
-        {
-            parent = new int[n];
-            rank = new int[n];
-            for (int i = 0; i < n; i++)
-            {
-                parent[i] = i;
-                rank[i] = 0;
-            }
-        }
-
-        public int Find(int u)
-        {
-            if (u != parent[u])
-            {
-                parent[u] = Find(parent[u]);
-            }
-            return parent[u];
-        }
-
-        public void Union(int u, int v)
-        {
-            int rootU = Find(u);
-            int rootV = Find(v);
-
-            if (rootU != rootV)
-            {
-                if (rank[rootU] > rank[rootV])
-                {
-                    parent[rootV] = rootU;
-                }
-                else if (rank[rootU] < rank[rootV])
-                {
-                    parent[rootU] = rootV;
-                }
-                else
-                {
-                    parent[rootV] = rootU;
-                    rank[rootU]++;
-                }
-            }
-        }
-    }
-
+    
     public class MazeCell
     {
         public GameObject[] Walls;
         public GameObject Floor;
-        public Vector2Int Position { get; private set; }
+        public Vector2Int Position;
 
         public MazeCell(Vector2Int pos, GameObject floorPrefab, Transform parent)
         {
@@ -203,26 +166,31 @@ public class MazeGenerator : MonoBehaviour
             Walls = new GameObject[4];
         }
 
-        public void AddWall(Facing facing, GameObject wallPrefab, Transform parent)
+        public void RemoveWall(Facing facing) {
+            if(Walls[(int)facing] != null)
+                Destroy(Walls[(int)facing]);
+        }
+
+        public void AddWall(Facing facing, GameObject wallPrefab)
         {
             Vector3 positionOffset = Vector3.zero;
             Vector3 rotation = Vector3.zero;
 
             switch (facing)
             {
-                case Facing.North:
+                case Facing.East:
                     positionOffset = new Vector3(0, 3, WALL_SIZE_Y / 2);
                     rotation = new Vector3(0, 0, 0);
                     break;
-                case Facing.South:
+                case Facing.West:
                     positionOffset = new Vector3(0, 3, -WALL_SIZE_Y / 2);
                     rotation = new Vector3(0, 180, 0);
                     break;
-                case Facing.East:
+                case Facing.North:
                     positionOffset = new Vector3(WALL_SIZE_X / 2, 3, 0);
                     rotation = new Vector3(0, 90, 0);
                     break;
-                case Facing.West:
+                case Facing.South:
                     positionOffset = new Vector3(-WALL_SIZE_X / 2, 3, 0);
                     rotation = new Vector3(0, -90, 0);
                     break;
@@ -231,7 +199,7 @@ public class MazeGenerator : MonoBehaviour
             GameObject wall = GameObject.Instantiate(wallPrefab);
             wall.transform.position = new Vector3(Position.x * WALL_SIZE_X, 0, Position.y * WALL_SIZE_Y) + positionOffset;
             wall.transform.rotation = Quaternion.Euler(rotation);
-            wall.transform.SetParent(parent);
+            wall.transform.SetParent(Floor.transform);
             Walls[(int)facing] = wall;
         }
     }
