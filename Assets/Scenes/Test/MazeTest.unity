@@ -247,10 +247,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   parent: {fileID: 563180105}
-  wallPrefab: {fileID: 5612595783698485374, guid: 0ef0994cd0bda9c4f8fb967790a676d8, type: 3}
-  floorPrefab: {fileID: 3306007136303269972, guid: 82e40d6d7ab7ec34aac0a9564f335769, type: 3}
+  wallPrefabs:
+  - GO: {fileID: 5612595783698485374, guid: 2e0cefb0788bc624cb9261aa07812125, type: 3}
+    Weight: 50
+  floorPrefabs:
+  - GO: {fileID: 3306007136303269972, guid: 82e40d6d7ab7ec34aac0a9564f335769, type: 3}
+    Weight: 50
+  - GO: {fileID: 3306007136303269972, guid: ae995a1cca3b9474c9773dead7bbd7c3, type: 3}
+    Weight: 35
+  - GO: {fileID: 3306007136303269972, guid: de47388966c1a524f97a8e95bbd7971d, type: 3}
+    Weight: 23
+  - GO: {fileID: 3306007136303269972, guid: de14bc1f8d06d2242850744c1366a468, type: 3}
+    Weight: 2
+  ceilingPrefabs: []
   playerPrefab: {fileID: 6214710617016822133, guid: 22363c1970979a24393fd893d2a824c3, type: 3}
-  maxCellsCount: 128
+  maxCellsCount: 256
   delay: 0
   frontierCells: []
 --- !u!4 &246850140
@@ -296,7 +307,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1530058242}
   m_Father: {fileID: 1353407519}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &842834752
@@ -363,6 +375,37 @@ Transform:
   - {fileID: 842834753}
   - {fileID: 563180105}
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1530058241
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1530058242}
+  m_Layer: 0
+  m_Name: Lighting
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1530058242
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530058241}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 563180105}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1930853604
 GameObject:
