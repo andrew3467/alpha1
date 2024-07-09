@@ -1,7 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
+
+
 
 public class MazeGenerator : MonoBehaviour {
     Vector2Int[] Neighbors = new [] {
@@ -17,6 +21,7 @@ public class MazeGenerator : MonoBehaviour {
     [SerializeField] Transform parent;
     [SerializeField] GameObject wallPrefab;
     [SerializeField] GameObject floorPrefab;
+    [SerializeField] GameObject playerPrefab;
 
     [Space(20)]
     [SerializeField] int maxCellsCount = 512;
@@ -29,13 +34,14 @@ public class MazeGenerator : MonoBehaviour {
 
     System.Random prng;
     bool firstRun = true;
+    bool mazeGenerating = false;
 
     void Start() {
         mazeCells = new Dictionary<Vector2Int, MazeCell>();
         frontierCells = new List<Vector2Int>();
 
         prng = new System.Random();
-        
+        StartPrims();
     }
     
     Vector2Int GetRandomCell() {
@@ -43,21 +49,26 @@ public class MazeGenerator : MonoBehaviour {
     }
 
     public void StartPrims() {
-        print('1');
         StartCoroutine(RunPrims());
-        
+        SpawnPlayer();
+    }
+    
+    void SpawnPlayer() {
+        GameObject playerGO = Instantiate(playerPrefab, new Vector3(0.0f, 2.0f, 0.0f), Quaternion.identity);
     }
 
 
     IEnumerator RunPrims() {
         bool running = true;
+        mazeGenerating = true;
         while (running) {
             StepThroughPrims();
-            print(mazeCells.Count);
             yield return new WaitForSeconds(delay);
 
             running = mazeCells.Count < maxCellsCount;
         }
+
+        mazeGenerating = false;
     }
 
     public void StepThroughPrims() {
@@ -77,18 +88,30 @@ public class MazeGenerator : MonoBehaviour {
         }
 
             MazeCell cell = new MazeCell(selection, floorPrefab, parent);
+            
+            
         cell.AddWall(Facing.North, wallPrefab);
         cell.AddWall(Facing.South, wallPrefab);
         cell.AddWall(Facing.East, wallPrefab);
         cell.AddWall(Facing.West, wallPrefab);
-        
+
+        if(mazeCells.Count > 0) {
+            var neighbors = GetNeighbors(cell);
+            for (int i = 0; i < 4; i++) {
+                print(neighbors.Count);
+                var neighbor = neighbors[i];
+                if (neighbor == null) continue;
+
+                Facing dir = (Facing)i;
+                cell.RemoveWall(dir);
+            }
+        }
         
         
         mazeCells.Add(selection, cell);
 
         //None is not on edge
         for (int i = 0; i < Neighbors.Length; i++) {
-            Facing neighborFacing = (Facing)i;
             var neighborPos = selection + Neighbors[i];
 
             if (!mazeCells.ContainsKey(neighborPos)) {
@@ -97,24 +120,40 @@ public class MazeGenerator : MonoBehaviour {
         }
 
         if (prevCell != null) {
-            RemoveWalls(cell, mazeCells[RandomNeighbor(cell)]);
+            RemoveWalls(cell, RandomNeighbor(cell));
         }
 
         prevCell = cell;
 
     }
 
-    Vector2Int RandomNeighbor(MazeCell cell) {
-        var neighbor = cell.Position + Neighbors[prng.Next(0, Neighbors.Length)];
+    List<MazeCell> GetNeighbors(MazeCell cell) {
+        List<MazeCell> neighbors = new List<MazeCell>();
+        
+        for (int i = 0; i < 4; i++) {
+            var pos = cell.Position + Neighbors[i];
+            neighbors.Add(mazeCells.ContainsKey(pos) ? mazeCells[pos] : null);
+        }
 
-        while (!mazeCells.ContainsKey(neighbor)) {
-            neighbor = cell.Position + Neighbors[prng.Next(0, Neighbors.Length)];
+        return neighbors;
+    }
+
+    MazeCell RandomNeighbor(MazeCell cell) {
+        var neighbors = GetNeighbors(cell);
+        var neighbor = neighbors[prng.Next(0, neighbors.Count - 1)];
+
+        int limit = 16;
+        while (neighbor == null && limit > 0) {
+            neighbor = neighbors[prng.Next(0, 4)];
+            limit--;
         }
 
         return neighbor;
     }
     
     void RemoveWalls(MazeCell cell, MazeCell other) {
+        if(other == null || cell == null) return;
+        
         Facing direction = FacingFromOffset(cell.Position - other.Position);
 
         switch (direction) {
