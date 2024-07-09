@@ -43,7 +43,9 @@ public class MazeGenerator : MonoBehaviour {
     }
 
     public void StartPrims() {
+        print('1');
         StartCoroutine(RunPrims());
+        
     }
 
 
