@@ -6,10 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Levels/Main Menu/StartMenu.unity
+    path: Assets/Alpha1/Scenes/Levels/Main Menu/StartMenu.unity
     guid: dd254e1b02157f84a909403adcdf3364
   - enabled: 1
-    path: Assets/Scenes/Test/MazeTest.unity
+    path: Assets/Alpha1/Scenes/Test/MazeTest.unity
     guid: 9d2a991d983127d44b3e523891585c6a
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 41a7f7fdf89658c41a2841a39cfd6d83, type: 2}
