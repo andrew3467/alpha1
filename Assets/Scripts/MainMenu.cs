@@ -6,6 +6,6 @@ using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviour
 {
     public void LoadGame() {
-        SceneManager.LoadScene("FPSTest");
+        SceneManager.LoadScene("MazeTest");
     }
 }
