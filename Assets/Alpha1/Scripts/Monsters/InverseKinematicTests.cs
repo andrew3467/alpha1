@@ -25,15 +25,15 @@ public class InverseKinematicTests : MonoBehaviour {
         currentNormal = newNormal = oldNormal = transform.up;
         lerp = 1;
     }
-
-    // Update is called once per frame
-
+    
+    
+    Ray ray;
     void Update()
     {
         transform.position = currentPosition;
         transform.up = currentNormal;
 
-        Ray ray = new Ray(body.position + (body.right * footSpacing), Vector3.down);
+        ray = new Ray(body.position + (body.right * footSpacing), Vector3.down);
 
         if (Physics.Raycast(ray, out RaycastHit info, 10, terrainLayer.value))
         {
@@ -62,11 +62,13 @@ public class InverseKinematicTests : MonoBehaviour {
         }
     }
 
-    private void OnDrawGizmos()
+    void OnDrawGizmos()
     {
 
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(newPosition, 0.25f);
+        
+        Gizmos.DrawRay(transform.position, ray.direction);
     }
 
 
