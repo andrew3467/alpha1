@@ -197,7 +197,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4301980977829760386}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de1b9e58a3326c2459c27958879e5a85, type: 3}
+  m_Script: {fileID: 11500000, guid: 69c6a9ec4d3b6294ebd3608de242a0b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 513669716061430662}
@@ -210,7 +210,7 @@ MonoBehaviour:
   defaultHeight: 2
   crouchHeight: 1
   crouchSpeed: 3
-  flashlight: {fileID: 0}
+  flashlight: {fileID: 3408766070317806109}
 --- !u!1 &4302138519165562309
 GameObject:
   m_ObjectHideFlags: 0
